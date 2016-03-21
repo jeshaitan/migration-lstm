@@ -174,6 +174,8 @@ from keras.layers.core import Dense, Activation, Masking
 from keras.layers.recurrent import LSTM
 from keras.layers.normalization import BatchNormalization
 
+numpy.set_printoptions(threshold=numpy.nan)
+
 #build and train model
 in_dimension = 3
 hidden_neurons = 300
@@ -208,3 +210,4 @@ for i in range(0, max_sequence_length - 1):
     current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
 
 print(current_generated_sequence)
+np.savetxt('output.csv', current_generated_sequence, delimiter=',')
