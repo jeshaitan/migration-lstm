@@ -62,8 +62,8 @@ for fn in os.listdir(myPath):
        masterArray.append(spreadSheetArray)
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
-print seqs
-print steps
+#print seqs
+#print steps
 
 ########################################################################################################################
 
@@ -182,11 +182,11 @@ out_dimension = 2
 model = Sequential()
 model.add(BatchNormalization(input_shape=((max_sequence_length, in_dimension))))
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
-model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
+#model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
 model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False))
 model.add(Dense(out_dimension, activation='linear'))
 
-model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
+model.compile(loss="mse", optimizer="sgd")
 model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=1)
 
 #fetch temperature from NOAA and inject into location tuple
@@ -206,4 +206,5 @@ current_generated_sequence = np.array([[[seed_lat, seed_long, seed_temp]] + [[0,
 for i in range(0, max_sequence_length - 1):
     next_step = model.predict(current_generated_sequence, batch_size=1, verbose=1)[0]
     current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
-    print(current_generated_sequence)
+
+print(current_generated_sequence)
