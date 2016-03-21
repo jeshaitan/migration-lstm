@@ -172,6 +172,7 @@ print padded_training_seqs.shape, training_final_steps.shape
 from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Masking
 from keras.layers.recurrent import LSTM
+from keras.layers.normalization import BatchNormalization
 
 #build and train model
 in_dimension = 3
@@ -179,11 +180,11 @@ hidden_neurons = 300
 out_dimension = 2
 
 model = Sequential()
+model.add(BatchNormalization(input_shape=((max_sequence_length, in_dimension))))
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
-model.add(LSTM(hidden_neurons, return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
-model.add(LSTM(hidden_neurons, return_sequences=False))
-model.add(Dense(out_dimension))
-model.add(Activation('linear'))
+model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
+model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False))
+model.add(Dense(out_dimension, activation='linear'))
 
 model.compile(loss="categorical_crossentropy", optimizer="rmsprop")
 model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=1)
