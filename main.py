@@ -4,10 +4,6 @@ import numpy as np
 import os
 import inspect
 
-def chunks(l, n):
-    for i in xrange(0, len(l), n):
-        yield l[i:i+n]
-
 date = ''
 latitude = ''
 longitude = ''
@@ -128,7 +124,7 @@ def reqtemp(lat, long, time, extraLat):
    # generate url
    urlTemp = "http://coastwatch.pfeg.noaa.gov/erddap/griddap/"  # generic format
    urlTemp += 'jplMURSST.xhtml?analysed_sst'
-   appendUrl = '[(' + date + ')]'  # date
+   appendUrl = '[(' + time + ')]'  # date
    urlTemp += appendUrl
    botLat = str(lat - extraLat)
    topLat = str(lat + extraLat)
@@ -193,8 +189,6 @@ model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=1)
 
 #fetch temperature from NOAA and inject into location tuple
 def loc_with_temp(ll, i):
-    #time_since_initial = average_timestep * i
-    #temp = reqtemp(ll[0], ll[1], initial_time + time_since_initial, 0.1)
     temp = reqtemp(ll[0], ll[1], '2012-01-02T02:16:24Z', 0.1)
     return [ll[0], ll[1], temp]
 
