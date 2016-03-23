@@ -4,6 +4,10 @@ import numpy as np
 import os
 import inspect
 
+def chunks(l, n):
+    for i in xrange(0, len(l), n):
+        yield l[i:i+n]
+
 date = ''
 latitude = ''
 longitude = ''
@@ -59,11 +63,10 @@ for fn in os.listdir(myPath):
                testCount += 1
                if testCount == -10:
                    break
-       masterArray.append(spreadSheetArray)
+       masterArray.extend([spreadSheetArray[i:i+25] for i in xrange(0, len(spreadSheetArray), 25)])
+
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
-#print seqs
-#print steps
 
 ########################################################################################################################
 
@@ -174,8 +177,6 @@ from keras.layers.core import Dense, Activation, Masking
 from keras.layers.recurrent import LSTM
 from keras.layers.normalization import BatchNormalization
 
-numpy.set_printoptions(threshold=numpy.nan)
-
 #build and train model
 in_dimension = 3
 hidden_neurons = 300
@@ -208,6 +209,9 @@ current_generated_sequence = np.array([[[seed_lat, seed_long, seed_temp]] + [[0,
 for i in range(0, max_sequence_length - 1):
     next_step = model.predict(current_generated_sequence, batch_size=1, verbose=1)[0]
     current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
+    #print new iteration
+    print(current_generated_sequence[0][i])
 
+np.set_printoptions(threshold=np.nan)
 print(current_generated_sequence)
 np.savetxt('output.csv', current_generated_sequence, delimiter=',')
