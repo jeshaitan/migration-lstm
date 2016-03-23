@@ -59,8 +59,10 @@ for fn in os.listdir(myPath):
                testCount += 1
                if testCount == -10:
                    break
+       masterArray.append(spreadSheetArray)
+       masterArray.extend([spreadSheetArray[i:i+50] for i in xrange(0, len(spreadSheetArray), 50)])  
+       masterArray.extend([spreadSheetArray[i:i+30] for i in xrange(0, len(spreadSheetArray), 30)])
        masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
-
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
 
@@ -77,42 +79,29 @@ br.set_handle_robots(False)  # ignore robots
 br.set_handle_refresh(False)  # can sometimes hang without this
 
 def findClose(tempList):
-   print '12'
    midIndex = int(len(tempList) / 2)
    firstNum = -1
    secondNum = -1
    val1 = -1
    val2 = -1
-   print '13'
    for num in range(midIndex, 0, -1):
-       print '14'
-       if (tempList[num]):
-           print '15'
+      if (tempList[num]):
            firstNum = num
            val1 = tempList[num]
-           print '16'
            break
    for num in range(midIndex, len(tempList)):
-       print '17'
        if (tempList[num]):
-           print '18'
            secondNum = num
            val2 = tempList[num]
-           print '19'
            break
-   print '20'
    if (val1 == -1 and val2 == -1):
        return False
-   print '21'
    if (val1 == -1):
        return val2
-   print '22'
    if (val2 == -1):
        return val1
-   print '23'
    if ((midIndex - firstNum) < (secondNum - midIndex)):
        return val1
-   print '24'
    return val2
 
 
@@ -171,21 +160,34 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Activation, Masking, Dropout
 from keras.layers.recurrent import LSTM
 from keras.layers.normalization import BatchNormalization
+from keras.layers.noise import GaussianNoise
 
 #build and train model
 in_dimension = 3
-hidden_neurons = 300
+hidden_neurons = 50
 out_dimension = 2
 
+"""
 model = Sequential()
 model.add(BatchNormalization(input_shape=((max_sequence_length, in_dimension))))
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
+model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
+model.add(Dropout(0.9))    
 model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False))
+model.add(Dropout(0.9))    
+model.add(Dense(out_dimension, activation='linear'))
+model.compile(loss="mse", optimizer="sgd")
+model.fit(padded_training_seqs, training_final_steps, nb_epoch=2, batch_size=10)
+"""
+
+model = Sequential()
+model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
+model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False, input_shape=(max_sequence_length, in_dimension)))
 model.add(Dropout(0.2))
 model.add(Dense(out_dimension, activation='linear'))
 
-model.compile(loss="mse", optimizer="sgd")
-model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=1)
+model.compile(loss="mse", optimizer="adam")
+model.fit(padded_training_seqs, training_final_steps, nb_epoch=10, batch_size=32)
 
 #fetch temperature from NOAA and inject into location tuple
 def loc_with_temp(ll, i):
@@ -200,7 +202,7 @@ seed_temp = 25.066
 current_generated_sequence = np.array([[[seed_lat, seed_long, seed_temp]] + [[0,0,0]] * (max_sequence_length - 1)], dtype=np.dtype(float))
 
 for i in range(0, max_sequence_length - 1):
-    next_step = model.predict(current_generated_sequence, batch_size=1, verbose=1)[0]
+    next_step = model.predict(current_generated_sequence, batch_size=10, verbose=1)[0]
     current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
     #print new iteration
     print(current_generated_sequence[0][i])
