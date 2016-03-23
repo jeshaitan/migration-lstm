@@ -63,7 +63,7 @@ for fn in os.listdir(myPath):
                testCount += 1
                if testCount == -10:
                    break
-       masterArray.extend([spreadSheetArray[i:i+25] for i in xrange(0, len(spreadSheetArray), 25)])
+       masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
 
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
@@ -164,7 +164,6 @@ def reqtemp(lat, long, time, extraLat):
        return findClose(tempList)
 
 ########################################################################################################################
-
 max_sequence_length = len(max(seqs,key=len))
 
 #pad and prepare sequences for model
@@ -173,7 +172,7 @@ training_final_steps = np.array(steps)
 print padded_training_seqs.shape, training_final_steps.shape
 
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation, Masking
+from keras.layers.core import Dense, Activation, Masking, Dropout
 from keras.layers.recurrent import LSTM
 from keras.layers.normalization import BatchNormalization
 
@@ -185,8 +184,8 @@ out_dimension = 2
 model = Sequential()
 model.add(BatchNormalization(input_shape=((max_sequence_length, in_dimension))))
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
-#model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
 model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False))
+model.add(Dropout(0.2))
 model.add(Dense(out_dimension, activation='linear'))
 
 model.compile(loss="mse", optimizer="sgd")
@@ -214,4 +213,3 @@ for i in range(0, max_sequence_length - 1):
 
 np.set_printoptions(threshold=np.nan)
 print(current_generated_sequence)
-np.savetxt('output.csv', current_generated_sequence, delimiter=',')
