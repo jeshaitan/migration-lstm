@@ -9,7 +9,9 @@ latitude = ''
 longitude = ''
 temp = ''
 masterArray = []
+masterArrayTime = []
 spreadSheetArray = []
+spreadSheetArrayTime = []
 row = 0
 col = 0
 testCount = 0
@@ -18,19 +20,21 @@ skipLine = False
 myPath = os.path.dirname(os.path.realpath(__file__))
 myFile = inspect.getfile(inspect.currentframe())  # script filename (usually with path)
 myFile = myFile[myFile.rfind('/') + 1:]
-for fn in os.listdir(myPath):
-   if os.path.isfile(fn) and fn != myFile and 'csv' in fn:
+for fn in os.listdir(myPath + '/sequences'):
+   if True:
        date = ''
        lat = ''
        long = ''
        temp = ''
        spreadSheetArray = []
+       spreadSheetArrayTime = []
        rowArray = []
        row = 0
        col = 0
        testCount = 0
        skipLine = False
-       with open(fn) as animalData:  # Open the file
+       with open('sequences/' + fn) as animalData:  # Open the file
+           print(animalData)
            animalData.readline()  # Read past the UTC and labels that we don't need
            animalData.readline()  # Read past the UTC and labels that we don't need
            spreadSheetArray = []
@@ -53,6 +57,9 @@ for fn in os.listdir(myPath):
                        continue
                    elif col == 7:
                        longitude = word
+                   elif col == 6:
+                       date = word
+                       spreadSheetArrayTime.append(date)
                    elif col == 8:
                        latitude = word
                    col += 1
@@ -60,10 +67,16 @@ for fn in os.listdir(myPath):
                if testCount == -10:
                    break
        if(spreadSheetArray != []):
-        masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
+           #masterArray.append(spreadSheetArray)
+           masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
+       if (spreadSheetArrayTime != []):
+           masterArrayTime.append(spreadSheetArrayTime)
 
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
+timeseqs = masterArrayTime
+modeltimeseq = max(enumerate(masterArrayTime), key = lambda tup: len(tup[1]))[1]
+print modeltimeseq
 
 ########################################################################################################################
 
@@ -156,10 +169,8 @@ training_final_steps = np.array(steps)
 print padded_training_seqs.shape, training_final_steps.shape
 
 from keras.models import Sequential
-from keras.layers.core import Dense, Activation, Masking, Dropout
+from keras.layers.core import Dense, Masking, Dropout
 from keras.layers.recurrent import LSTM
-from keras.layers.normalization import BatchNormalization
-from keras.layers.noise import GaussianNoise
 from keras.optimizers import SGD
 
 #build and train model
@@ -175,17 +186,17 @@ model.add(Dense(out_dimension, activation='linear'))
 
 sgd = SGD(lr=0.05, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss="mse", optimizer=sgd)
-model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=32)
+model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=32, verbose=2)
 
 #fetch temperature from NOAA and inject into location tuple
 def loc_with_temp(ll, i):
-    temp = reqtemp(ll[0], ll[1], '2012-01-02T02:16:24Z', 0.1)
+    temp = reqtemp(ll[0], ll[1], modeltimeseq[i], 0.1)
     return [ll[0], ll[1], temp]
 
 #generate new sequence based on seed
-seed_lat = 42.966
-seed_long = 39.869
-seed_temp = 25.066
+seed_lat = 44.9
+seed_long = 37.7
+seed_temp = 9.5
 
 current_generated_sequence = np.array([[[seed_lat, seed_long, seed_temp]] + [[0,0,0]] * (max_sequence_length - 1)], dtype=np.dtype(float))
 
