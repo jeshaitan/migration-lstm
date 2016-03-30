@@ -67,7 +67,6 @@ for fn in os.listdir(myPath + '/sequences'):
                if testCount == -10:
                    break
        if(spreadSheetArray != []):
-           #masterArray.append(spreadSheetArray)
            masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
        if (spreadSheetArrayTime != []):
            masterArrayTime.append(spreadSheetArrayTime)
@@ -76,7 +75,7 @@ seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
 timeseqs = masterArrayTime
 modeltimeseq = max(enumerate(masterArrayTime), key = lambda tup: len(tup[1]))[1]
-print modeltimeseq
+
 
 ########################################################################################################################
 
@@ -175,7 +174,7 @@ from keras.optimizers import SGD
 
 #build and train model
 in_dimension = 3
-hidden_neurons = 300
+hidden_neurons = 100
 out_dimension = 2
 
 model = Sequential()
@@ -186,7 +185,7 @@ model.add(Dense(out_dimension, activation='linear'))
 
 sgd = SGD(lr=0.05, decay=1e-6, momentum=0.9, nesterov=True)
 model.compile(loss="mse", optimizer=sgd)
-model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=32, verbose=2)
+model.fit(padded_training_seqs, training_final_steps, nb_epoch=10, batch_size=32, verbose=2, show_accuracy=True)
 
 #fetch temperature from NOAA and inject into location tuple
 def loc_with_temp(ll, i):
