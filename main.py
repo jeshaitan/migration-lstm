@@ -59,10 +59,9 @@ for fn in os.listdir(myPath):
                testCount += 1
                if testCount == -10:
                    break
-       masterArray.append(spreadSheetArray)
-       masterArray.extend([spreadSheetArray[i:i+50] for i in xrange(0, len(spreadSheetArray), 50)])  
-       masterArray.extend([spreadSheetArray[i:i+30] for i in xrange(0, len(spreadSheetArray), 30)])
-       masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
+       if(spreadSheetArray != []):
+        masterArray.extend([spreadSheetArray[i:i+10] for i in xrange(0, len(spreadSheetArray), 10)])
+
 seqs = masterArray
 steps = map(lambda l: l[len(l) - 1][:2], seqs)
 
@@ -161,24 +160,12 @@ from keras.layers.core import Dense, Activation, Masking, Dropout
 from keras.layers.recurrent import LSTM
 from keras.layers.normalization import BatchNormalization
 from keras.layers.noise import GaussianNoise
+from keras.optimizers import SGD
 
 #build and train model
 in_dimension = 3
-hidden_neurons = 50
+hidden_neurons = 300
 out_dimension = 2
-
-"""
-model = Sequential()
-model.add(BatchNormalization(input_shape=((max_sequence_length, in_dimension))))
-model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
-model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=True, input_shape=(max_sequence_length, in_dimension)))
-model.add(Dropout(0.9))    
-model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False))
-model.add(Dropout(0.9))    
-model.add(Dense(out_dimension, activation='linear'))
-model.compile(loss="mse", optimizer="sgd")
-model.fit(padded_training_seqs, training_final_steps, nb_epoch=2, batch_size=10)
-"""
 
 model = Sequential()
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
@@ -186,8 +173,9 @@ model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False, inp
 model.add(Dropout(0.2))
 model.add(Dense(out_dimension, activation='linear'))
 
-model.compile(loss="mse", optimizer="adam")
-model.fit(padded_training_seqs, training_final_steps, nb_epoch=10, batch_size=32)
+sgd = SGD(lr=0.05, decay=1e-6, momentum=0.9, nesterov=True)
+model.compile(loss="mse", optimizer=sgd)
+model.fit(padded_training_seqs, training_final_steps, nb_epoch=5, batch_size=32)
 
 #fetch temperature from NOAA and inject into location tuple
 def loc_with_temp(ll, i):
