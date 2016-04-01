@@ -171,6 +171,7 @@ from keras.models import Sequential
 from keras.layers.core import Dense, Masking, Dropout
 from keras.layers.recurrent import LSTM
 from keras.optimizers import SGD
+from keras.utils.visualize_util import plot, to_graph
 
 #build and train model
 in_dimension = 3
@@ -180,6 +181,7 @@ out_dimension = 2
 model = Sequential()
 model.add(Masking([0,0,0], input_shape=(max_sequence_length, in_dimension)))
 model.add(LSTM(hidden_neurons, activation='softmax', return_sequences=False, input_shape=(max_sequence_length, in_dimension)))
+model.add(Dropout(0.2))
 model.add(Dropout(0.2))
 model.add(Dense(out_dimension, activation='linear'))
 
@@ -200,10 +202,14 @@ seed_temp = 9.5
 current_generated_sequence = np.array([[[seed_lat, seed_long, seed_temp]] + [[0,0,0]] * (max_sequence_length - 1)], dtype=np.dtype(float))
 
 for i in range(0, max_sequence_length - 1):
-    next_step = model.predict(current_generated_sequence, batch_size=10, verbose=1)[0]
+    next_step = model.predict(current_generated_sequence, batch_size=10, verbose=2)[0]
     current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
     #print new iteration
     print(current_generated_sequence[0][i])
 
 np.set_printoptions(threshold=np.nan)
 print(current_generated_sequence)
+
+
+graph = to_graph(model, show_shape=True)
+graph.write_png("model.png")
