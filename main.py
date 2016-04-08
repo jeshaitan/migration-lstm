@@ -199,15 +199,23 @@ def loc_with_temp(ll, i):
     return [ll[0], ll[1], temp]
 
 #generate new sequence based on seed
-seed = [44.80696869, 38.74343872, 9.243]
+newest_seed = [44.80696869, 38.74343872, 9.243]
 
-gen_seq_len = 1000
+gen_seq_len = 50
+main_seq = np.array([])
 
-current_generated_sequence = np.array([[[seed[0], seed[1], seed[2]]] + [[0,0,0]] * (gen_seq_len - 1)], dtype=np.dtype(float))
-for i in range(0, gen_seq_len - 1):
-    next_step = model.predict(current_generated_sequence, batch_size=10, verbose=1)[0]
-    current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i)
-    print(current_generated_sequence)
+def make_seq(seed, iteration):
+    current_generated_sequence = np.array([[[seed[0], seed[1], seed[2]]] + [[0,0,0]] * (gen_seq_len - 1)], dtype=np.dtype(float))
+    for i in range(0, gen_seq_len - 1):
+        next_step = model.predict(current_generated_sequence, batch_size=10, verbose=1)[0]
+        current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i + gen_seq_len * iteration)
+        np.append(main_seq, current_generated_sequence[0][i + 1])
+        print main_seq
+    return current_generated_sequence
+
+for i in range(0, 5):
+    newest_seq = make_seq(newest_seed, i)
+    newest_seed = newest_seq[0][0]
 
 np.set_printoptions(threshold=np.nan)
-print(current_generated_sequence)
+print(main_seq)
