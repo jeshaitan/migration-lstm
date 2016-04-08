@@ -202,20 +202,25 @@ def loc_with_temp(ll, i):
 newest_seed = [44.80696869, 38.74343872, 9.243]
 
 gen_seq_len = 50
-main_seq = np.array([])
+main_seq = []
 
 def make_seq(seed, iteration):
     current_generated_sequence = np.array([[[seed[0], seed[1], seed[2]]] + [[0,0,0]] * (gen_seq_len - 1)], dtype=np.dtype(float))
     for i in range(0, gen_seq_len - 1):
         next_step = model.predict(current_generated_sequence, batch_size=10, verbose=1)[0]
         current_generated_sequence[0][i + 1] = loc_with_temp(next_step, i + gen_seq_len * iteration)
-        np.append(main_seq, current_generated_sequence[0][i + 1])
+        main_seq.append(current_generated_sequence[0][i + 1])
         print main_seq
     return current_generated_sequence
 
 for i in range(0, 5):
     newest_seq = make_seq(newest_seed, i)
     newest_seed = newest_seq[0][0]
+
+import itertools
+def grouper(n, iterable, fillvalue=None):
+    args = [iter(iterable)] * n
+    return itertools.zip_longest(*args, fillvalue=fillvalue)
 
 np.set_printoptions(threshold=np.nan)
 print(main_seq)
